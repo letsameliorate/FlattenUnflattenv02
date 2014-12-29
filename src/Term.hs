@@ -22,7 +22,7 @@ potDef = emptyDef
            nestedComments   = True,
            identStart       = lower,
            identLetter      = do letter <|> oneOf "_'",
-           reservedNames    = ["case", "of", "where"],
+           reservedNames    = ["case", "of", "let", "in", "where"],
 --           reservedOpNames  = ["~", "/\\", "\\/", "<=>", "=>"],
            caseSensitive    = True
          }
@@ -122,3 +122,11 @@ term =     do
               reserved "of"
               bs <- sepBy1 branch (symbol "|")
               return (DCase e bs)
+       <|> do
+              reserved "let"
+              x <- identifier
+              symbol "="
+              e0 <- expr
+              reserved "in"
+              e1 <- expr
+              return (DLet x e0 e1)
