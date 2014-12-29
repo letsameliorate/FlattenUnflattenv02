@@ -23,7 +23,6 @@ potDef = emptyDef
            identStart       = lower,
            identLetter      = do letter <|> oneOf "_'",
            reservedNames    = ["case", "of", "let", "in", "where"],
---           reservedOpNames  = ["~", "/\\", "\\/", "<=>", "=>"],
            caseSensitive    = True
          }
 
@@ -41,6 +40,11 @@ natural     = T.natural lexer
 {-|
     Parser of Pot to DTerm
 |-}
+
+con = do
+         c <- upper
+         cs <- many letter
+         return (c:cs)
 
 makeWhere e [] = e
 makeWhere e fs = let (fnames, _) = unzip fs
@@ -62,17 +66,6 @@ makeFuns fnames (DWhere dt ts) = DWhere (makeFuns fnames dt) (map (\(x, dt) -> (
     Create parsers
 |-}
 
-prog = do
-          e <- expr
-          fs <-     do
-                       reserved "where"
-                       fs <- sepBy1 fundef semic
-                       return fs
-                <|> do
-                       spaces
-                       return []
-          return (makeWhere e fs)
-
 fundef = do
             f <- identifier
             symbol "="
@@ -82,22 +75,10 @@ fundef = do
 expr = buildExpressionParser prec term
 
 prec = []
-{-|
-prec = [ [unop "~" (Fun)],
-       ]
-       where
-       op o t assoc = Infix (do
-                                reservedOp o
-                                return (\x y -> Apply (t x) y)
-                            ) assoc
-       unop o t     = Prefix (do
-                                 reservedOp o
-                                 return (\x -> Apply t x)
-                             )
-|-}
 
 term =     do
-              e <- expr
+              f <- identifier
+              as <- many atom
               fs <-     do
                            reserved "where"
                            fs <- sepBy1 fundef semic
@@ -105,9 +86,9 @@ term =     do
                     <|> do
                            spaces
                            return []
-              return (makeWhere e fs)
+              return (makeWhere (DFunApp f as) fs)
        <|> do
-              x <- atom
+              x <- identifier
               as <- many atom
               return (DFreeApp x as)
        <|> do
@@ -131,3 +112,30 @@ term =     do
               e1 <- expr
               return (DLet x e0 e1)
 
+atom =     do
+              x <- identifier
+              return (DFreeApp x [])
+       <|> do
+              c <- con
+              es <-     do
+                           es <- bracks (sepBy1 expr comm)
+                           return es
+                    <|> do
+                           spaces
+                           return []
+              return (DConApp c es)
+       <|> do
+              e <- bracks expr
+              return e
+
+branch =    do
+               c <- con
+               xs <-    do
+                           xs <- bracks (sepBy1 identifier comm)
+                           return xs
+                    <|> do
+                           spaces
+                           return []
+               symbol "->"
+               e <- expr
+               return (c, xs, e)
