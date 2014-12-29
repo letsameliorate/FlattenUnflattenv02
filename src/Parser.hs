@@ -13,7 +13,7 @@ potDef = emptyDef
            commentLine      = "--",
            nestedComments   = True,
            identStart       = lower,
-           identLetter      = do letter <|> oneOf "_'",
+           identLetter      = do alphaNum <|> oneOf "_'",
            reservedNames    = ["case", "of", "let", "in", "where"],
            caseSensitive    = True
          }
