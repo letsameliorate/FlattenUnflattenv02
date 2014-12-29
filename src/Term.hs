@@ -74,7 +74,7 @@ prog = do
 
 fundef = do
             f <- identifier
-            symbol = "="
+            symbol "="
             e <- expr
             return(f, e)
 
