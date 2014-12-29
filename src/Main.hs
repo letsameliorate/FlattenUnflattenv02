@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Term
+import Parser
 
 main :: IO ()
 
