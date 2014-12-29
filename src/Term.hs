@@ -59,19 +59,25 @@ makeFuns fnames (DWhere dt ts) = DWhere (makeFuns fnames dt) (map (\(x, dt) -> (
 
 {-|
     Create parsers
+|-}
 
 prog = do
-        e <- expr
-        fs <-       do
-                    reserved "where"
-                    fs <- sepBy1 fundef semic
-                    return fs
+          e <- expr
+          fs <-     do
+                       reserved "where"
+                       fs <- sepBy1 fundef semic
+                       return fs
                 <|> do
-                    spaces
-                    return []
-        return (makeWhere e fs)
+                       spaces
+                       return []
+          return (makeWhere e fs)
 
-|-}
+fundef = do
+            f <- identifier
+            symbol = "="
+            e <- expr
+            return(f, e)
+
 
 
 
