@@ -15,6 +15,11 @@ data DTerm = DFreeApp String [DTerm] -- Free Variable Application
            | DWhere DTerm [(String, DTerm)] -- Local Function Definition
   deriving (Show)
 
+
+{-|
+    Parser of Pot to DTerm
+|-}
+
 potDef = emptyDef
          { commentStart     = "{-|",
            commentEnd       = "|-}",
@@ -36,10 +41,6 @@ identifier  = T.identifier lexer
 reserved    = T.reserved lexer
 natural     = T.natural lexer
 
-
-{-|
-    Parser of Pot to DTerm
-|-}
 
 list2ConsList [] = DConApp "Nil" []
 list2ConsList (t:ts) = DConApp "Cons" [t, (list2ConsList ts)]
@@ -66,14 +67,10 @@ makeFuns fnames (DWhere dt ts) = DWhere (makeFuns fnames dt) (map (\(x, dt) -> (
 
 
 {-|
-    Create parsers
+    Parsers
 |-}
 
-fundef = do
-            f <- identifier
-            symbol "="
-            e <- expr
-            return(f, e)
+parseExpr input = parse expr "(ERROR)" input
 
 expr = buildExpressionParser prec term
 
@@ -89,7 +86,7 @@ term =     do
                     <|> do
                            spaces
                            return []
-              return (makeWhere (DFunApp f as) fs)
+              return (makeWhere (DFreeApp f as) fs)
        <|> do
               x <- identifier
               as <- many atom
@@ -114,6 +111,12 @@ term =     do
               reserved "in"
               e1 <- expr
               return (DLet x e0 e1)
+
+fundef = do
+            f <- identifier
+            symbol "="
+            e <- expr
+            return(f, e)
 
 atom =     do
               x <- identifier
@@ -147,5 +150,3 @@ branch =    do
                symbol "->"
                e <- expr
                return (c, xs, e)
-
-parseExpr input = parse expr "(ERROR)" input

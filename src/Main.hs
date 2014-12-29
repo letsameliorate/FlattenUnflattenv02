@@ -5,4 +5,4 @@ import Term
 main :: IO ()
 
 main = do
-        putStrLn "Hello World\n"
+          putStrLn "Hello World\n"
