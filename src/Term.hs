@@ -97,15 +97,25 @@ prec = [ [unop "~" (Fun)],
 |-}
 
 term =     do
-              f <- atom
+              e <- expr
+              fs <-     do
+                           reserved "where"
+                           fs <- sepBy1 fundef semic
+                           return fs
+                    <|> do
+                           spaces
+                           return []
+              return (makeWhere e fs)
+       <|> do
+              x <- atom
               as <- many atom
-              return (DFreeApp f as) (DFunApp f as)
-           do
+              return (DFreeApp x as)
+       <|> do
               symbol "\\"
-              (x:_) <- many1 identifier
+              xs <- many1 identifier
               symbol "."
               e <- expr
-              return (DLambda x e)
+              return (foldr (\x t -> (DLambda x t)) e xs)
        <|> do
               reserved "case"
               e <- expr
