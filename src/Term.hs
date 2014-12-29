@@ -41,6 +41,9 @@ natural     = T.natural lexer
     Parser of Pot to DTerm
 |-}
 
+list2ConsList [] = DConApp "Nil" []
+list2ConsList (t:ts) = DConApp "Cons" [t, (list2ConsList ts)]
+
 con = do
          c <- upper
          cs <- many letter
@@ -124,6 +127,11 @@ atom =     do
                            spaces
                            return []
               return (DConApp c es)
+       <|> do
+              symbol "["
+              ts <- sepBy expr comm
+              symbol "]"
+              return (list2ConsList ts)
        <|> do
               e <- bracks expr
               return e
