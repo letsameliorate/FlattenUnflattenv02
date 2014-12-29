@@ -96,4 +96,19 @@ prec = [ [unop "~" (Fun)],
                              )
 |-}
 
-term = do
+term =     do
+              f <- atom
+              as <- many atom
+              return (DFreeApp f as) (DFunApp f as)
+           do
+              symbol "\\"
+              (x:_) <- many1 identifier
+              symbol "."
+              e <- expr
+              return (DLambda x e)
+       <|> do
+              reserved "case"
+              e <- expr
+              reserved "of"
+              bs <- sepBy1 branch (symbol "|")
+              return (DCase e bs)
