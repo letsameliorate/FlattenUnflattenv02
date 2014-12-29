@@ -24,8 +24,12 @@ data DTerm = DFreeVarApp FreeVar [DTerm] -- Free Variable Application
   deriving (Show)
 
 potDef = emptyDef
-         { commentStart = "{-|",
-           commentEnd   = "|-}",
-           commentLine  = "--",
-           nestedComments = True
+         { commentStart     = "{-|",
+           commentEnd       = "|-}",
+           commentLine      = "--",
+           nestedComments   = True,
+           identStart       = lower,
+           identLetter      = do letter <|> oneOf "_'",
+           reservedNames    = ["case", "of", "where"],
+           caseSensitive    = True
          }
