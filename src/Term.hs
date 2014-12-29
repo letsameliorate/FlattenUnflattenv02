@@ -46,15 +46,19 @@ makeWhere e fs = let (fnames, _) = unzip fs
                  in makeFuns fnames (DWhere e fs)
 
 makeFuns fnames (DFreeApp x dts) = if x `elem` fnames
-                                then DFunApp x (map (makeFuns fnames) dts)
-                                else DFreeApp x (map (makeFuns fnames) dts)
+                                   then DFunApp x (map (makeFuns fnames) dts)
+                                   else DFreeApp x (map (makeFuns fnames) dts)
 makeFuns fnames (DBoundApp i dts) = DBoundApp i (map (makeFuns fnames) dts)
 makeFuns fnames (DConApp c dts) = DConApp c (map (makeFuns fnames) dts)
 makeFuns fnames (DLambda x dt) = DLambda x (makeFuns fnames dt)
 makeFuns fnames (DLet x dt0 dt1) = DLet x (makeFuns fnames dt0) (makeFuns fnames dt1)
 makeFuns fnames (DCase csel bs) = DCase (makeFuns fnames csel) (map (\(c, xs, dt) -> (c, xs, makeFuns fnames dt)) bs)
-makeFuns fnames (DFunApp f)
+makeFuns fnames (DFunApp f dts) = DFunApp f (map (makeFuns fnames) dts)
+makeFuns fnames (DWhere dt ts) = DWhere (makeFuns fnames dt) (map (\(x, dt) -> (x, makeFuns fnames dt)) ts)
 
+
+{-|
+    Create parsers
 
 prog = do
         e <- expr
@@ -66,5 +70,8 @@ prog = do
                     spaces
                     return []
         return (makeWhere e fs)
+
+|-}
+
 
 
