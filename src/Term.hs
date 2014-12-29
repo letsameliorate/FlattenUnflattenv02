@@ -78,6 +78,6 @@ fundef = do
             e <- expr
             return(f, e)
 
-
+expr = buildExpressionParser prec term
 
 
