@@ -1,5 +1,9 @@
 module DTerm where
 
+{-|
+    Distilled Expression
+|-}
+
 data DTerm = DFreeApp String [DTerm] -- Free Variable Application
            | DBoundApp Int [DTerm] -- Bound Variable Application
            | DConApp String [DTerm] -- Constructor Application
