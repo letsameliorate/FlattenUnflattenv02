@@ -103,6 +103,9 @@ term =     do
               reserved "in"
               e1 <- expr
               return (DLet x e0 e1)
+       <|> do
+              a <- atom
+              return a
 
 fundef = do
             f <- identifier

@@ -5,4 +5,4 @@ import Parser
 main :: IO ()
 
 main = do
-          putStrLn "Hello World\n"
+          print (parseExpr "f x y where f = \\x y. case x of Ca -> x | Cb -> y")
