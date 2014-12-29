@@ -147,3 +147,5 @@ branch =    do
                symbol "->"
                e <- expr
                return (c, xs, e)
+
+parseExpr input = parse expr "(ERROR)" input
