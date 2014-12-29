@@ -33,3 +33,13 @@ potDef = emptyDef
            reservedNames    = ["case", "of", "where"],
            caseSensitive    = True
          }
+
+lexer = T.makeTokenParser potDef
+
+symbol      = T.symbol lexer
+bracks      = T.parens lexer
+semic       = T.semi lexer
+comm        = T.comma lexer
+identifier  = T.identifier lexer
+reserved    = T.reserved lexer
+natural     = T.natural lexer
