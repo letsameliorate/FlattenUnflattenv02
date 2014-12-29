@@ -5,22 +5,14 @@ import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as T
 import Text.ParserCombinators.Parsec.Language
 
-type FreeVar = String -- Free Variable
-type BoundVar = Int -- de Bruijn Index for Bound Variable
-type ConName = String -- Constructor Name
-type FunName = String -- Function Name
-type CaseSel = (FreeVar, [DTerm]) -- Case Selector
-type Branch = (ConName, [FreeVar], DTerm) -- Case Branch
-type FunDef = (FunName, [FreeVar], DTerm) -- Function Definition
-
-data DTerm = DFreeVarApp FreeVar [DTerm] -- Free Variable Application
-           | DBoundVarApp BoundVar [DTerm] -- Bound Variable Application
-           | DConApp ConName [DTerm] -- Constructor Application
-           | DLambda FreeVar DTerm -- Lambda Abstraction
-           | DFunApp FunName [DTerm] -- Function Application
-           | DLet FreeVar DTerm DTerm -- Let Expression
-           | DCase CaseSel [Branch] -- Case Expression
-           | DWhere FunName [DTerm] FunDef -- Local Function Definition
+data DTerm = DFreeApp String [DTerm] -- Free Variable Application
+           | DBoundApp Int [DTerm] -- Bound Variable Application
+           | DConApp String [DTerm] -- Constructor Application
+           | DLambda String DTerm -- Lambda Abstraction
+           | DLet String DTerm DTerm -- Let Expression
+           | DCase DTerm [(String, [String], DTerm)] -- Case Expression
+           | DFunApp String [DTerm] -- Function Application
+           | DWhere DTerm [(String, DTerm)] -- Local Function Definition
   deriving (Show)
 
 potDef = emptyDef
@@ -43,3 +35,36 @@ comm        = T.comma lexer
 identifier  = T.identifier lexer
 reserved    = T.reserved lexer
 natural     = T.natural lexer
+
+
+{-|
+    Parser of Pot to DTerm
+|-}
+
+makeWhere e [] = e
+makeWhere e fs = let (fnames, _) = unzip fs
+                 in makeFuns fnames (DWhere e fs)
+
+makeFuns fnames (DFreeApp x dts) = if x `elem` fnames
+                                then DFunApp x (map (makeFuns fnames) dts)
+                                else DFreeApp x (map (makeFuns fnames) dts)
+makeFuns fnames (DBoundApp i dts) = DBoundApp i (map (makeFuns fnames) dts)
+makeFuns fnames (DConApp c dts) = DConApp c (map (makeFuns fnames) dts)
+makeFuns fnames (DLambda x dt) = DLambda x (makeFuns fnames dt)
+makeFuns fnames (DLet x dt0 dt1) = DLet x (makeFuns fnames dt0) (makeFuns fnames dt1)
+makeFuns fnames (DCase csel bs) = DCase (makeFuns fnames csel) (map (\(c, xs, dt) -> (c, xs, makeFuns fnames dt)) bs)
+makeFuns fnames (DFunApp f)
+
+
+prog = do
+        e <- expr
+        fs <-       do
+                    reserved "where"
+                    fs <- sepBy1 fundef semic
+                    return fs
+                <|> do
+                    spaces
+                    return []
+        return (makeWhere e fs)
+
+
