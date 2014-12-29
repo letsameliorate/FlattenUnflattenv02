@@ -15,11 +15,6 @@ data DTerm = DFreeApp String [DTerm] -- Free Variable Application
            | DWhere DTerm [(String, DTerm)] -- Local Function Definition
   deriving (Show)
 
-
-{-|
-    Parser of Pot to DTerm
-|-}
-
 potDef = emptyDef
          { commentStart     = "{-|",
            commentEnd       = "|-}",
@@ -30,6 +25,11 @@ potDef = emptyDef
            reservedNames    = ["case", "of", "let", "in", "where"],
            caseSensitive    = True
          }
+
+
+{-|
+    Parser of Pot to DTerm
+|-}
 
 lexer = T.makeTokenParser potDef
 
