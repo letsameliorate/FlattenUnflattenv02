@@ -23,6 +23,7 @@ potDef = emptyDef
            identStart       = lower,
            identLetter      = do letter <|> oneOf "_'",
            reservedNames    = ["case", "of", "where"],
+--           reservedOpNames  = ["~", "/\\", "\\/", "<=>", "=>"],
            caseSensitive    = True
          }
 
@@ -80,4 +81,19 @@ fundef = do
 
 expr = buildExpressionParser prec term
 
+prec = []
+{-|
+prec = [ [unop "~" (Fun)],
+       ]
+       where
+       op o t assoc = Infix (do
+                                reservedOp o
+                                return (\x y -> Apply (t x) y)
+                            ) assoc
+       unop o t     = Prefix (do
+                                 reservedOp o
+                                 return (\x -> Apply t x)
+                             )
+|-}
 
+term = do
