@@ -1,4 +1,4 @@
-module Term where
+module DTerm where
 
 data DTerm = DFreeApp String [DTerm] -- Free Variable Application
            | DBoundApp Int [DTerm] -- Bound Variable Application

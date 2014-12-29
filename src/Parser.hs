@@ -1,6 +1,6 @@
 module Parser where
 
-import Term
+import DTerm
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as T
