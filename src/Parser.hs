@@ -39,7 +39,7 @@ list2ConsList (t:ts) = DConApp "Cons" [t, (list2ConsList ts)]
 
 con = do
          c <- upper
-         cs <- many letter
+         cs <- many alphaNum
          return (c:cs)
 
 makeWhere e [] = e
