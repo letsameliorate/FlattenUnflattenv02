@@ -37,14 +37,14 @@ natural     = T.natural lexer
 list2ConsList [] = DConApp "Nil" []
 list2ConsList (t:ts) = DConApp "Cons" [t, (list2ConsList ts)]
 
-con = do
-         c <- upper
-         cs <- many alphaNum
-         return (c:cs)
+conName = do
+             c <- upper
+             cs <- many alphaNum
+             return (c:cs)
 
-makeWhere e [] = e
-makeWhere e fs = let (fnames, _) = unzip fs
-                 in makeFuns fnames (DWhere e fs)
+makeWhere dt [] = dt
+makeWhere dt fs = let (fnames, _) = unzip fs
+                  in makeFuns fnames (DWhere dt fs)
 
 makeFuns fnames (DFreeApp x dts) = if x `elem` fnames
                                    then DFunApp x (map (makeFuns fnames) dts)
@@ -55,21 +55,21 @@ makeFuns fnames (DLambda x dt) = DLambda x (makeFuns fnames dt)
 makeFuns fnames (DLet x dt0 dt1) = DLet x (makeFuns fnames dt0) (makeFuns fnames dt1)
 makeFuns fnames (DCase csel bs) = DCase (makeFuns fnames csel) (map (\(c, xs, dt) -> (c, xs, makeFuns fnames dt)) bs)
 makeFuns fnames (DFunApp f dts) = DFunApp f (map (makeFuns fnames) dts)
-makeFuns fnames (DWhere dt ts) = DWhere (makeFuns fnames dt) (map (\(x, dt) -> (x, makeFuns fnames dt)) ts)
+makeFuns fnames (DWhere dt fs) = DWhere (makeFuns fnames dt) (map (\(f, dt) -> (f, makeFuns fnames dt)) fs)
 
 
 {-|
     Parsers
 |-}
 
-parseExpr input = parse expr "(ERROR)" input
+parseExpr = parse expr "(ERROR)"
 
 expr = buildExpressionParser prec term
 
 prec = []
 
 term =     do
-              f <- identifier
+              x <- identifier
               as <- many atom
               fs <-     do
                            reserved "where"
@@ -78,23 +78,19 @@ term =     do
                     <|> do
                            spaces
                            return []
-              return (makeWhere (DFreeApp f as) fs)
+              return (makeWhere (DFreeApp x as) fs)
+{-|
        <|> do
               x <- identifier
               as <- many atom
               return (DFreeApp x as)
+|-}
        <|> do
               symbol "\\"
               xs <- many1 identifier
               symbol "."
               e <- expr
               return (foldr (\x t -> (DLambda x t)) e xs)
-       <|> do
-              reserved "case"
-              e <- expr
-              reserved "of"
-              bs <- sepBy1 branch (symbol "|")
-              return (DCase e bs)
        <|> do
               reserved "let"
               x <- identifier
@@ -104,20 +100,26 @@ term =     do
               e1 <- expr
               return (DLet x e0 e1)
        <|> do
+              reserved "case"
+              e <- expr
+              reserved "of"
+              bs <- sepBy1 branch (symbol "|")
+              return (DCase e bs)
+       <|> do
               a <- atom
               return a
 
-fundef = do
-            f <- identifier
-            symbol "="
-            e <- expr
-            return(f, e)
+fundef =   do
+              f <- identifier
+              symbol "="
+              e <- expr
+              return(f, e)
 
 atom =     do
               x <- identifier
               return (DFreeApp x [])
        <|> do
-              c <- con
+              c <- conName
               es <-     do
                            es <- bracks (sepBy1 expr comm)
                            return es
@@ -134,15 +136,15 @@ atom =     do
               e <- bracks expr
               return e
 
-branch =    do
-               c <- con
-               xs <-    do
-                           xs <- bracks (sepBy1 identifier comm)
-                           return xs
-                    <|> do
-                           spaces
-                           return []
-               symbol "->"
-               e <- expr
-               return (c, xs, e)
+branch =   do
+              c <- conName
+              xs <-    do
+                          xs <- bracks (sepBy1 identifier comm)
+                          return xs
+                   <|> do
+                          spaces
+                          return []
+              symbol "->"
+              e <- expr
+              return (c, xs, e)
 
